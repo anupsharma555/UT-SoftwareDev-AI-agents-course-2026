@@ -1,0 +1,17 @@
+{
+  "name": "devanswers-backend",
+  "version": "1.0.0",
+  "description": "The goal of this project is to implement a backend for a Q&A platform using MongoDB and Mongoose.",
+  "type": "module",
+  "scripts": {
+    "queries": "node queries.js",
+    "populate": "node scripts/populate_db.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "mongoose": "^8.14.2"
+  }
+}
