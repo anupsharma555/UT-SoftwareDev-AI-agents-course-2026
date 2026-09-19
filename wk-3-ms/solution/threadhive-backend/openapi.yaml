@@ -1,0 +1,435 @@
+openapi: 3.0.3
+info:
+  title: ThreadHive API
+  description: REST API for ThreadHive, a Reddit-style social media platform with subreddits and threads.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Subreddits
+    description: Endpoints for managing subreddits (communities)
+  - name: Threads
+    description: Endpoints for managing threads (discussion posts)
+
+paths:
+  /api/subreddits:
+    get:
+      tags: [Subreddits]
+      summary: Fetch all subreddits
+      responses:
+        "200":
+          description: Subreddits fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Subreddit"
+              example:
+                success: true
+                message: Subreddits fetched successfully
+                data:
+                  - _id: "665f1a2b8f1b2c001f5e1234"
+                    name: react
+                    description: Discussions about React
+                    author: "665f1a2b8f1b2c001f5e0001"
+                    createdAt: "2024-06-04T10:00:00.000Z"
+                    updatedAt: "2024-06-04T10:00:00.000Z"
+        "404":
+          description: No subreddits found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while fetching subreddits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Subreddits]
+      summary: Create a new subreddit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubredditRequest"
+            example:
+              name: react
+              description: Discussions about React
+              author: "665f1a2b8f1b2c001f5e0001"
+      responses:
+        "201":
+          description: Subreddit created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Subreddit"
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Subreddit with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while creating subreddit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/subreddits/{id}:
+    get:
+      tags: [Subreddits]
+      summary: Fetch a subreddit and its threads
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Subreddit and its threads fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          subreddit:
+                            $ref: "#/components/schemas/Subreddit"
+                          threads:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Thread"
+        "404":
+          description: Subreddit not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while fetching subreddit with threads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/threads:
+    get:
+      tags: [Threads]
+      summary: Fetch all threads
+      responses:
+        "200":
+          description: Threads fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Thread"
+        "404":
+          description: No threads found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while fetching threads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Threads]
+      summary: Create a new thread
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateThreadRequest"
+            example:
+              title: What do you think about the new React Compiler?
+              content: Curious how it changes memoization patterns in practice.
+              author: "665f1a2b8f1b2c001f5e0001"
+              subreddit: "665f1a2b8f1b2c001f5e1234"
+      responses:
+        "201":
+          description: Thread created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Thread"
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while creating thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/threads/{id}:
+    get:
+      tags: [Threads]
+      summary: Fetch a single thread
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Thread fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Thread"
+        "404":
+          description: Thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while fetching thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags: [Threads]
+      summary: Update a thread
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateThreadRequest"
+            example:
+              title: What do you think about the new React Compiler? (Updated)
+              content: Updated with more thoughts after testing it out.
+      responses:
+        "200":
+          description: Thread updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Thread"
+        "404":
+          description: Thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while updating thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Threads]
+      summary: Delete a thread
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Thread deleted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Thread"
+        "404":
+          description: Thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error while deleting thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: MongoDB ObjectId of the resource
+      schema:
+        type: string
+        example: "665f1a2b8f1b2c001f5e1234"
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data: {}
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+    Subreddit:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "665f1a2b8f1b2c001f5e1234"
+        name:
+          type: string
+          example: react
+        description:
+          type: string
+          example: Discussions about React
+        author:
+          type: string
+          example: "665f1a2b8f1b2c001f5e0001"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateSubredditRequest:
+      type: object
+      required: [name, description, author]
+      properties:
+        name:
+          type: string
+          example: react
+        description:
+          type: string
+          example: Discussions about React
+        author:
+          type: string
+          description: ObjectId of the User creating the subreddit
+          example: "665f1a2b8f1b2c001f5e0001"
+
+    Thread:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "665f1a2b8f1b2c001f5e5678"
+        title:
+          type: string
+          example: What do you think about the new React Compiler?
+        content:
+          type: string
+          example: Curious how it changes memoization patterns in practice.
+        author:
+          type: string
+          example: "665f1a2b8f1b2c001f5e0001"
+        subreddit:
+          type: string
+          example: "665f1a2b8f1b2c001f5e1234"
+        upvotes:
+          type: integer
+          example: 0
+        downvotes:
+          type: integer
+          example: 0
+        voteCount:
+          type: integer
+          example: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateThreadRequest:
+      type: object
+      required: [title, content, author, subreddit]
+      properties:
+        title:
+          type: string
+          example: What do you think about the new React Compiler?
+        content:
+          type: string
+          example: Curious how it changes memoization patterns in practice.
+        author:
+          type: string
+          description: ObjectId of the User creating the thread
+          example: "665f1a2b8f1b2c001f5e0001"
+        subreddit:
+          type: string
+          description: ObjectId of the Subreddit the thread belongs to
+          example: "665f1a2b8f1b2c001f5e1234"
+
+    UpdateThreadRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: What do you think about the new React Compiler? (Updated)
+        content:
+          type: string
+          example: Updated with more thoughts after testing it out.
