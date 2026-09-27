@@ -1,0 +1,9 @@
+# Local configuration and secrets
+**/.env
+**/.env.*
+
+# Installed dependencies
+node_modules/
+
+# macOS folder metadata
+.DS_Store
