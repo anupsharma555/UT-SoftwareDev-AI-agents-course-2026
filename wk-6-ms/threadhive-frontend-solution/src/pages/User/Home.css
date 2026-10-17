@@ -1,0 +1,31 @@
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.home-card {
+  border-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background-color: var(--bg-white) !important;
+}
+
+.home-title {
+  color: var(--text-dark);
+  font-weight: 700;
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.3px;
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .home-container {
+    padding: 16px 8px;
+  }
+
+  .home-title {
+    font-size: 1.5rem;
+  }
+}
