@@ -4,7 +4,7 @@
 
 These instructions focus on `threadhive-backend-soln/`, the Week 4 Express backend solution for ThreadHive. Users register and log in, create communities and discussion threads, add comments, and vote. The main areas are service error handling, JWT authentication, security, unit/integration testing, and documentation.
 
-This file is at the solution project root, `wk-4-ms/threadhive-backend-soln/`, and applies to this package and its descendants. The enclosing `UT-Course-2026/` directory is the Git root. Paths below are relative to this solution directory unless explicitly stated otherwise. Keep changes within the user's task. Check Git status before editing or staging; do not include unrelated course work.
+This file is at the solution project root, `wk-04-ms/threadhive-backend-soln/`, and applies to this package and its descendants. The enclosing `UT-Course-2026/` directory is the Git root. Paths below are relative to this solution directory unless explicitly stated otherwise. Keep changes within the user's task. Check Git status before editing or staging; do not include unrelated course work.
 
 ## Documentation and assignment requirements
 
@@ -115,7 +115,7 @@ For vote changes, test both models, repetition, switching among multiple voters,
 
 ## Setup and commands
 
-From `wk-4-ms/`, run `cd threadhive-backend-soln` before the commands below. The solution uses npm; no Node engine or package-manager version is pinned. Inspect its lockfile and installed tools before installation. Run its own package scripts and keep dependency changes within this package.
+From `wk-04-ms/`, run `cd threadhive-backend-soln` before the commands below. The solution uses npm; no Node engine or package-manager version is pinned. Inspect its lockfile and installed tools before installation. Run its own package scripts and keep dependency changes within this package.
 
 Configure `MONGODB_URI`, `PORT`, `JWT_SECRET`, and `NODE_ENV` in a local `.env` without overwriting existing values. Both `.env` and the local `.env.example` are excluded from this publication. Startup uses `MONGODB_URI` and needs a reachable database; token signing and verification require `JWT_SECRET`. `PORT` defaults to 3000. Verify that the database is disposable before any population/reset action.
 

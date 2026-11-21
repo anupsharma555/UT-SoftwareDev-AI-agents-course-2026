@@ -19,7 +19,7 @@ developer Q&A experiences, with independent frontend and backend packages.
 | Application | Focus | Featured implementation |
 | --- | --- | --- |
 | **ThreadHive** | Topic-based communities, threads, comments, voting, and user accounts | [AI-enabled ThreadHive](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/tree/feat/wk9-threadhive/wk-9-ms/WK9_MLS_Starter_Code) on `feat/wk9-threadhive` |
-| **DevAnswers** | Developer questions and answers, tags, voting, and user accounts | [AI-enabled DevAnswers](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/tree/main/wk-9-proj) on `main` |
+| **DevAnswers** | Developer questions and answers, tags, voting, and user accounts | [AI-enabled DevAnswers](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/tree/main/wk-09-proj) on `main` |
 
 Other directories contain alternative implementations, earlier application
 variants, and smaller demonstrations. Packages are independently configured:
@@ -82,10 +82,10 @@ use the Gemini SDK at runtime to provide user-facing AI features.
 
 The repository also includes task-focused agent and skill definitions, such as:
 
-- **[Backend testing agent](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-4-gprojstartercode/devanswers-backend/.github/agents/backend-testing-agent.agent.md):** guides Vitest service tests and Supertest API integration tests with an isolated MongoDB instance.
-- **[React testing agent](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-6-ms/.github/agents/react-testing-agent.agent.md):** focuses on accessible, behavior-oriented component tests using React Testing Library and Vitest.
-- **[Fix skill](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-6-ms/threadhive-frontend-starter/skills/fix/SKILL.md):** describes a formatting and linting workflow for a frontend project.
-- **[Playwright CLI skill](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-7-ms/starter_code/threadhive-frontend/.claude/skills/playwright-cli/SKILL.md):** provides browser automation and testing guidance for Claude Code.
+- **[Backend testing agent](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-04-gprojstartercode/devanswers-backend/.github/agents/backend-testing-agent.agent.md):** guides Vitest service tests and Supertest API integration tests with an isolated MongoDB instance.
+- **[React testing agent](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-06-ms/.github/agents/react-testing-agent.agent.md):** focuses on accessible, behavior-oriented component tests using React Testing Library and Vitest.
+- **[Fix skill](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-06-ms/threadhive-frontend-starter/skills/fix/SKILL.md):** describes a formatting and linting workflow for a frontend project.
+- **[Playwright CLI skill](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-07-ms/starter_code/threadhive-frontend/.claude/skills/playwright-cli/SKILL.md):** provides browser automation and testing guidance for Claude Code.
 
 These are project-specific instructions rather than universal commands; their
 availability and execution depend on the assistant, workspace, and installed
@@ -100,7 +100,7 @@ changes in another branch.
 
 ```bash
 git clone --branch main https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026.git
-cd UT-SoftwareDev-AI-agents-course-2026/wk-9-proj/devanswers-backend
+cd UT-SoftwareDev-AI-agents-course-2026/wk-09-proj/devanswers-backend
 npm install
 cp .env.example .env
 ```
@@ -116,7 +116,7 @@ npm run dev
 In a second terminal, from the clone root, start the frontend:
 
 ```bash
-cd wk-9-proj/devanswers-frontend
+cd wk-09-proj/devanswers-frontend
 npm install
 npm run dev
 ```
@@ -124,7 +124,7 @@ npm run dev
 Open the URL printed by Vite. DevAnswers uses `http://localhost:3000/api`
 by default; configure `VITE_API_URL` in the frontend's
 `.env.development.local` if the backend uses another address.
-See the [DevAnswers README](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-9-proj/README.md)
+See the [DevAnswers README](https://github.com/anupsharma555/UT-SoftwareDev-AI-agents-course-2026/blob/main/wk-09-proj/README.md)
 for further details.
 
 **Database seeding:** Some backends provide `npm run populate`. These scripts
