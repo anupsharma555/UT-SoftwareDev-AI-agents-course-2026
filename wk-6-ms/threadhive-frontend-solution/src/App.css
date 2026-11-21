@@ -1,0 +1,65 @@
+:root {
+  --primary-orange: #FF4500;
+  --primary-blue: #0079D3;
+  --bg-light: #F8F9FA;
+  --bg-white: #FFFFFF;
+  --text-dark: #1A1A1B;
+  --text-muted: #7C7C7C;
+  --border-light: #EDEFF1;
+  --hover-bg: #F6F7F8;
+}
+
+/* Dark mode theme */
+[data-theme="dark"] {
+  --primary-orange: #FF6B35;
+  --primary-blue: #4FABFF;
+  --bg-light: #1A1D23;
+  --bg-white: #2C2F36;
+  --text-dark: #E8E9EA;
+  --text-muted: #B0B3B8;
+  --border-light: #3E4147;
+  --hover-bg: #363940;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-light);
+  overflow-x: hidden;
+  max-width: 100vw;
+  transition: background-color 0.3s ease;
+}
+
+.main-center-content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 24px 16px;
+  margin: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .main-center-content {
+    padding: 16px 8px;
+  }
+}
