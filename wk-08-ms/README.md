@@ -8,7 +8,7 @@ frontend and backend packages.
 ## Project layout
 
 ```text
-wk-8-ms/
+wk-08-ms/
 ├── WK8_MLS_Solution/
 │   ├── threadhive-backend/   # Express API, MongoDB models, and tests
 │   └── threadhive-frontend/  # React application, Redux state, and tests
