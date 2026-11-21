@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookmarks (Saved Questions) — DevAnswers Spec 001</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --surface: #ffffff;
+    --surface-2: #f1f3f9;
+    --text: #1f2430;
+    --text-dim: #5b6473;
+    --border: #e3e7ef;
+    --accent: #6366f1;
+    --accent-strong: #4338ca;
+    --accent-soft: #eef2ff;
+    --code-bg: #f5f6fa;
+    --code-text: #2d2f3a;
+    --shadow: 0 1px 3px rgba(20,24,40,.06), 0 8px 24px rgba(20,24,40,.05);
+    --get: #0ea472; --post: #2563eb; --del: #dc2626; --put: #d97706;
+    --maxw: 860px;
+  }
+  [data-theme="dark"] {
+    --bg: #0e1118;
+    --surface: #161b25;
+    --surface-2: #1c2330;
+    --text: #e6e9f0;
+    --text-dim: #9aa4b6;
+    --border: #28303d;
+    --accent: #818cf8;
+    --accent-strong: #a5b4fc;
+    --accent-soft: #1e2236;
+    --code-bg: #11151d;
+    --code-text: #d6dae4;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre, kbd { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    color: #fff;
+    background:
+      radial-gradient(1200px 400px at 12% -10%, rgba(255,255,255,.18), transparent 60%),
+      linear-gradient(135deg, #4f46e5 0%, #6366f1 45%, #7c3aed 100%);
+    padding: 3.2rem clamp(1.2rem, 5vw, 4rem) 2.6rem;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: auto -10% -60% auto; width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(255,255,255,.12), transparent 70%); border-radius: 50%;
+  }
+  .hero-inner { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero .eyebrow { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; opacity: .85; font-weight: 600; }
+  .hero h1 { margin: .4rem 0 .5rem; font-size: clamp(1.9rem, 4vw, 2.9rem); line-height: 1.1; font-weight: 800; letter-spacing: -.02em; }
+  .hero .lede { font-size: 1.12rem; max-width: 60ch; opacity: .96; margin: 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.4rem; }
+  .badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+    padding: .32rem .7rem; border-radius: 999px; font-size: .82rem; font-weight: 600;
+    backdrop-filter: blur(4px);
+  }
+  .badge.status { background: #fff; color: var(--accent-strong); border-color: #fff; }
+
+  .theme-toggle {
+    position: absolute; top: 1.2rem; right: clamp(1.2rem, 5vw, 4rem); z-index: 2;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3); color: #fff;
+    border-radius: 999px; padding: .5rem .9rem; cursor: pointer; font-size: .85rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: .45rem;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,.26); }
+
+  /* ---------- Layout ---------- */
+  .layout {
+    max-width: 1180px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2.5rem);
+    display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 2.6rem; align-items: start;
+  }
+  .toc {
+    position: sticky; top: 1.2rem; align-self: start; max-height: calc(100vh - 2.4rem);
+    overflow-y: auto; padding: 1.4rem 0; font-size: .9rem;
+  }
+  .toc h2 { font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--text-dim); margin: 0 0 .8rem; }
+  .toc ul { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
+  .toc li a {
+    display: block; padding: .34rem .9rem; color: var(--text-dim); border-left: 2px solid transparent;
+    margin-left: -2px; transition: color .15s, border-color .15s; line-height: 1.35;
+  }
+  .toc li a:hover { color: var(--text); text-decoration: none; }
+  .toc li a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc li a.sub { padding-left: 1.6rem; font-size: .85rem; }
+
+  main { max-width: var(--maxw); padding: 2.4rem 0 5rem; min-width: 0; }
+  section { scroll-margin-top: 1.4rem; margin-bottom: 3rem; }
+  section > h2 {
+    font-size: 1.55rem; font-weight: 750; letter-spacing: -.01em; margin: 0 0 1rem;
+    padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  }
+  section h3 { font-size: 1.12rem; margin: 1.8rem 0 .7rem; font-weight: 700; }
+  section h4 { font-size: .98rem; margin: 1.3rem 0 .5rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; }
+  p { margin: .7rem 0; }
+  ul.body, ol.body { margin: .7rem 0; padding-left: 1.3rem; }
+  ul.body li, ol.body li { margin: .4rem 0; }
+  strong { font-weight: 700; }
+
+  :not(pre) > code {
+    background: var(--code-bg); border: 1px solid var(--border); color: var(--code-text);
+    padding: .08em .42em; border-radius: 6px; font-size: .86em;
+  }
+
+  /* ---------- Code blocks ---------- */
+  figure.code { margin: 1.1rem 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--code-bg); box-shadow: var(--shadow); }
+  figure.code figcaption {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface-2); border-bottom: 1px solid var(--border);
+    padding: .4rem .8rem; font-size: .76rem;
+  }
+  figure.code .lang { color: var(--text-dim); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-family: ui-monospace, monospace; }
+  figure.code .copy {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 6px; padding: .2rem .6rem; cursor: pointer; font-size: .76rem; font-weight: 600;
+  }
+  figure.code .copy:hover { color: var(--text); border-color: var(--accent); }
+  figure.code .copy.done { color: var(--get); border-color: var(--get); }
+  figure.code pre { margin: 0; padding: .95rem 1rem; overflow-x: auto; }
+  figure.code pre code { color: var(--code-text); font-size: .855rem; line-height: 1.6; }
+
+  /* ---------- Callouts ---------- */
+  .callout { border: 1px solid var(--border); border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: .85rem 1.1rem; margin: 1.2rem 0; }
+  .callout.note { border-left-color: var(--post); }
+  .callout.warn { border-left-color: var(--put); background: color-mix(in srgb, var(--put) 8%, var(--surface)); }
+  .callout p:first-child { margin-top: 0; } .callout p:last-child { margin-bottom: 0; }
+  .callout .tag { font-weight: 800; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-strong); }
+
+  /* ---------- Acceptance checklist ---------- */
+  ol.checklist { list-style: none; counter-reset: ac; margin: 1rem 0; padding: 0; display: grid; gap: .55rem; }
+  ol.checklist li {
+    counter-increment: ac; position: relative; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9px; padding: .7rem .9rem .7rem 3rem; box-shadow: var(--shadow);
+  }
+  ol.checklist li::before {
+    content: counter(ac); position: absolute; left: .7rem; top: .7rem; width: 1.55rem; height: 1.55rem;
+    background: var(--accent-soft); color: var(--accent-strong); border: 1px solid var(--border);
+    border-radius: 7px; font-size: .8rem; font-weight: 800; display: grid; place-items: center;
+  }
+  ol.checklist label { display: flex; gap: .6rem; align-items: flex-start; cursor: pointer; }
+  ol.checklist input { margin-top: .35rem; width: 1.05rem; height: 1.05rem; accent-color: var(--accent); flex: none; }
+  ol.checklist code { font-size: .82em; }
+
+  /* ---------- API cards ---------- */
+  .endpoint { border: 1px solid var(--border); border-radius: 11px; background: var(--surface); box-shadow: var(--shadow); margin: 1.1rem 0; overflow: hidden; }
+  .endpoint > .ep-head { display: flex; align-items: center; gap: .7rem; padding: .8rem 1rem; border-bottom: 1px solid var(--border); background: var(--surface-2); flex-wrap: wrap; }
+  .method { font-weight: 800; font-size: .76rem; letter-spacing: .05em; padding: .26rem .6rem; border-radius: 6px; color: #fff; }
+  .method.get { background: var(--get); } .method.post { background: var(--post); }
+  .method.delete { background: var(--del); } .method.put { background: var(--put); }
+  .ep-path { font-family: ui-monospace, monospace; font-weight: 700; font-size: .95rem; }
+  .ep-auth { margin-left: auto; font-size: .74rem; font-weight: 700; color: var(--del); border: 1px solid var(--border); padding: .2rem .55rem; border-radius: 999px; }
+  .endpoint .ep-body { padding: .4rem 1rem 1rem; }
+  .endpoint .ep-body p { margin: .8rem 0 .3rem; font-size: .92rem; }
+  .status-row { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+  .pill { font-size: .76rem; font-weight: 700; padding: .22rem .6rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); }
+  .pill.ok { color: var(--get); } .pill.created { color: var(--post); } .pill.err { color: var(--del); }
+
+  /* ---------- Tables ---------- */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
+  thead th { background: var(--surface-2); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  blockquote { margin: 1rem 0; padding: .2rem 1.1rem; border-left: 4px solid var(--border); color: var(--text-dim); }
+
+  /* ---------- Diagrams ---------- */
+  .diagram-wrap { margin: 1.4rem 0; }
+  .diagram-cap { font-size: .9rem; color: var(--text-dim); margin: 0 0 .55rem; font-weight: 600; }
+  .diagram-cap b { color: var(--text); }
+  .diagram {
+    background: #fbfcff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.1rem; overflow-x: auto; box-shadow: var(--shadow); text-align: center;
+  }
+  .diagram .mermaid { min-width: 480px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1.1rem; margin: .4rem 0 1.6rem; padding: .8rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: .86rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; }
+  .swatch { width: 1.05rem; height: 1.05rem; border-radius: 4px; display: inline-block; flex: none; }
+  .swatch.new { background: #6366f1; border: 2px solid #4338ca; }
+  .swatch.mod { background: #eef2ff; border: 2px dashed #6366f1; }
+  .swatch.exist { background: #e5e7eb; border: 1px solid #9ca3af; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.4rem 0; }
+  footer { max-width: 1180px; margin: 0 auto; padding: 2rem clamp(1rem,4vw,2.5rem) 3rem; color: var(--text-dim); font-size: .85rem; border-top: 1px solid var(--border); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1024px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    .toc { position: static; max-height: none; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; margin-top: 1.4rem; background: var(--surface); }
+    main { padding-top: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">🌙 <span id="themeLabel">Dark</span></button>
+  <div class="hero-inner">
+    <div class="eyebrow">DevAnswers · Spec 001</div>
+    <h1>Bookmarks — Saved Questions</h1>
+    <p class="lede">Let a logged-in user save / unsave a question and view their saved questions on their profile — a private, persistent reading list reachable from the profile page.</p>
+    <div class="meta">
+      <span class="badge status">● Draft</span>
+      <span class="badge">📄 specs/001-bookmarks.md</span>
+      <span class="badge">🗓 Generated 12 June 2026</span>
+      <span class="badge">🧩 New vertical slice: model → service → controller → route</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- TABLE OF CONTENTS (auto-built) -->
+  <aside>
+    <nav class="toc" aria-label="Table of contents">
+      <h2>On this page</h2>
+      <ul id="tocList"></ul>
+    </nav>
+  </aside>
+
+  <main>
+
+    <!-- ============ ARCHITECTURE ============ -->
+    <section id="architecture" data-toc="Architecture &amp; Integration">
+      <h2>Architecture &amp; Integration</h2>
+      <p>Bookmarks are added as a self-contained vertical slice that mirrors the existing
+        <code>tags</code> structure and plugs into the established layered flow
+        (<code>routes → controllers → services → models</code> on the backend; Redux thunk →
+        service → <code>axiosInstance</code> on the frontend). The diagrams below distinguish
+        brand-<b>new</b> files, <b>modified</b> existing files, and untouched <b>existing</b>
+        infrastructure that is reused as-is.</p>
+
+      <div class="legend" role="note" aria-label="Diagram legend">
+        <span><i class="swatch new"></i> New component (added by this feature)</span>
+        <span><i class="swatch mod"></i> Existing file, modified</span>
+        <span><i class="swatch exist"></i> Existing, reused unchanged</span>
+      </div>
+
+      <div class="diagram-wrap">
+        <p class="diagram-cap"><b>Figure 1 — System integration.</b> How the bookmark slice threads through the full stack, from a click on a card to the <code>bookmarks</code> collection.</p>
+        <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  subgraph FE["Frontend · React 19 / Redux Toolkit"]
+    direction TB
+    QC["QuestionCard.jsx"]:::mod
+    QCo["QuestionContent.jsx"]:::mod
+    PR["Profile.jsx — Saved Questions section"]:::mod
+    BL["BaseLayout.jsx — hydration effect"]:::mod
+    US["userSlice.js — logout"]:::mod
+    BB["BookmarkButton.jsx"]:::new
+    BS["bookmarkSlice.js — thunks + reducers"]:::new
+    BSVC["services/bookmarkService.js"]:::new
+    CFG["config.js — BOOKMARK_API"]:::mod
+    STORE["store.js — register reducer"]:::mod
+    AX["axiosInstance"]:::exist
+
+    QC --> BB
+    QCo --> BB
+    BB -->|"dispatch toggleBookmark"| BS
+    BL -->|"dispatch fetchSavedIds"| BS
+    PR -->|"dispatch fetchSavedQuestions"| BS
+    US -->|"dispatch clearBookmarks"| BS
+    STORE -.registers.-> BS
+    BS --> BSVC
+    BSVC --> CFG
+    BSVC --> AX
+  end
+
+  AX -->|"HTTPS · /api/bookmarks · Bearer JWT"| RT
+
+  subgraph BE["Backend · Express 5 (layered)"]
+    direction TB
+    RT["routes/index.js — mount /bookmarks"]:::mod
+    BR["routes/bookmarks.js"]:::new
+    AUTH["authenticate middleware"]:::exist
+    BC["bookmarkController.js"]:::new
+    BSV["services/bookmarkService.js"]:::new
+    QSV["questionService.deleteQuestionService"]:::mod
+    APP["app.js — register Bookmark model"]:::mod
+    EH["errorHandler"]:::exist
+    BM["models/Bookmark.js"]:::new
+
+    RT --> BR
+    BR --> AUTH
+    AUTH --> BC
+    BC --> BSV
+    BSV --> BM
+    QSV -->|"Bookmark.deleteMany on question delete"| BM
+    BSV -.throws createAppError.-> EH
+    APP -.registers.-> BM
+  end
+
+  BM --> DB[("MongoDB · bookmarks")]:::exist
+
+  classDef new fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#ffffff;
+  classDef mod fill:#eef2ff,stroke:#6366f1,stroke-width:2px,stroke-dasharray:6 3,color:#312e81;
+  classDef exist fill:#e5e7eb,stroke:#9ca3af,stroke-width:1px,color:#374151;
+</pre>
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <p class="diagram-cap"><b>Figure 2 — Save request flow.</b> <code>POST /api/bookmarks</code> end-to-end, showing the auth gate, id validation, the 200-vs-201 dedupe decision, and the E11000 race fallback.</p>
+        <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User (browser)
+  participant BB as BookmarkButton · new
+  participant SL as bookmarkSlice thunk · new
+  participant API as bookmarkService + axios · new
+  participant MW as authenticate · existing
+  participant C as bookmarkController · new
+  participant S as bookmarkService · new
+  participant DB as MongoDB
+
+  U->>BB: click bookmark icon
+  BB->>SL: dispatch toggleBookmark(questionId)
+  Note over SL: id not in savedIds, so save
+  SL->>API: saveQuestion(id, token)
+  API->>MW: POST /api/bookmarks (Bearer JWT)
+  alt missing or invalid token
+    MW-->>API: 401 envelope
+  else authenticated, sets req.user
+    MW->>C: next()
+    C->>S: save(userId, questionId)
+    alt malformed questionId
+      S-->>C: throw createAppError 400
+    else question not found
+      S->>DB: Question.findById
+      DB-->>S: null
+      S-->>C: throw createAppError 404
+    else already saved
+      S->>DB: Bookmark.findOne(user, question)
+      DB-->>S: existing doc
+      S-->>C: 200 "Question already saved"
+    else new save
+      S->>DB: Bookmark.create(user, question)
+      DB-->>S: created doc (E11000 race treated as 200)
+      S-->>C: 201 "Question saved"
+    end
+    C-->>API: success, message, data
+  end
+  API-->>SL: res.data.data
+  SL-->>BB: fulfilled, savedIds updated
+  BB-->>U: icon flips to filled, no reload
+</pre>
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <p class="diagram-cap"><b>Figure 3 — Data model.</b> The new <code>Bookmark</code> collection is a join between <code>User</code> and <code>Question</code>, with a unique compound index enforcing one save per pair.</p>
+        <div class="diagram">
+<pre class="mermaid">
+erDiagram
+  USER ||--o{ BOOKMARK : "saves"
+  QUESTION ||--o{ BOOKMARK : "is saved in"
+  USER ||--o{ QUESTION : "authors"
+  QUESTION ||--o{ ANSWER : "has"
+  QUESTION }o--o{ TAG : "tagged with"
+
+  BOOKMARK {
+    ObjectId user FK "ref User, required"
+    ObjectId question FK "ref Question, required"
+    Date createdAt "save time, drives order + savedAt"
+    Date updatedAt
+  }
+  USER {
+    ObjectId _id PK
+    string name
+    boolean isAdmin
+  }
+  QUESTION {
+    ObjectId _id PK
+    string title
+    ObjectId author FK
+  }
+  ANSWER {
+    ObjectId _id PK
+    ObjectId questionId FK
+  }
+  TAG {
+    ObjectId _id PK
+    string name
+  }
+</pre>
+        </div>
+        <div class="callout note"><span class="tag">Index</span>
+          <p><code>{ user: 1, question: 1 }</code> is <b>unique</b> — the canonical dedupe + race guard. <code>{ user: 1, createdAt: -1 }</code> backs the "my saved questions, newest first" query.</p>
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <p class="diagram-cap"><b>Figure 4 — Frontend state flow.</b> The non-trivial Redux behaviour: token-keyed hydration, logout teardown, and the <code>toggleBookmark</code> branch with optimistic rollback on reject.</p>
+        <div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  subgraph H["Hydration / teardown"]
+    direction TB
+    L1["userInfo becomes truthy (login or stored token)"]:::exist
+    L1 -->|"BaseLayout effect, keyed on userInfo"| FSI["fetchSavedIds()"]:::new
+    FSI --> SID["state.bookmark.savedIds"]:::new
+    LO["logoutUser"]:::mod -->|"clearBookmarks()"| RST["reset slice to initial"]:::new
+  end
+  subgraph T["toggleBookmark(questionId)"]
+    direction TB
+    T0["click BookmarkButton"]:::new --> T1{"id in savedIds?"}:::new
+    T1 -->|"yes"| UNS["unsaveQuestion()"]:::new
+    T1 -->|"no"| SAV["saveQuestion()"]:::new
+    UNS --> FUL["fulfilled: remove id + card from savedQuestions"]:::new
+    SAV --> FUL2["fulfilled: add id"]:::new
+    UNS -. rejected .-> RB["restore prior state + set error"]:::new
+    SAV -. rejected .-> RB
+  end
+  SID --> RENDER["cards + detail read savedIds, render filled / outline"]:::new
+  FUL --> RENDER
+  FUL2 --> RENDER
+
+  classDef new fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#ffffff;
+  classDef mod fill:#eef2ff,stroke:#6366f1,stroke-width:2px,stroke-dasharray:6 3,color:#312e81;
+  classDef exist fill:#e5e7eb,stroke:#9ca3af,stroke-width:1px,color:#374151;
+</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MOTIVATION ============ -->
+    <section id="motivation" data-toc="Problem / motivation">
+      <h2>Problem / motivation</h2>
+      <p>Users browsing DevAnswers frequently find questions they want to return to later — to
+        follow the discussion, reference an answer, or answer it themselves. Today there is no
+        way to keep a personal list of questions; the only way back to a question is search or
+        browser history. Bookmarks give each authenticated user a private, persistent list of
+        saved questions, reachable from their profile.</p>
+    </section>
+
+    <!-- ============ DECISIONS ============ -->
+    <section id="decisions" data-toc="Design decisions">
+      <h2>Design decisions (resolved)</h2>
+      <p>These were confirmed before writing the spec and drive the rest of the document:</p>
+      <ol class="body">
+        <li><strong>Storage:</strong> a dedicated <code>Bookmark</code> collection
+          (<code>{ user, question, createdAt }</code>) rather than an array on <code>User</code>
+          or <code>Question</code>. Gives reliable saved-at ordering and keeps bookmarks as their
+          own vertical slice (model → service → controller → route), mirroring how
+          <code>tags</code> is structured.</li>
+        <li><strong>Save control placement:</strong> a bookmark toggle on the question detail view
+          <strong>and</strong> on every <code>QuestionCard</code> in lists (Home, Tags, profile).
+          This requires the frontend to know which questions the current user has saved, hydrated
+          into a Redux slice on login.</li>
+        <li><strong>Profile surface:</strong> a "Saved Questions" section added to the existing
+          <code>Profile</code> page (not a separate route), rendered with <code>QuestionCard</code>.</li>
+      </ol>
+    </section>
+
+    <!-- ============ USER STORIES ============ -->
+    <section id="stories" data-toc="User stories">
+      <h2>User stories</h2>
+      <ul class="body">
+        <li>As a logged-in user, I can save a question from its detail page so I can find it later.</li>
+        <li>As a logged-in user, I can save or unsave a question directly from any question card in a list without opening it.</li>
+        <li>As a logged-in user, I can see at a glance which questions in a list I've already saved (filled vs. outline bookmark icon).</li>
+        <li>As a logged-in user, I can open my profile and see all the questions I've saved, most recently saved first.</li>
+        <li>As a logged-in user, I can unsave a question from my profile's saved list and have it disappear from the list.</li>
+        <li>As a logged-out visitor, I do not see bookmark controls and cannot save questions.</li>
+      </ul>
+    </section>
+
+    <!-- ============ ACCEPTANCE ============ -->
+    <section id="acceptance" data-toc="Acceptance criteria">
+      <h2>Acceptance criteria</h2>
+      <p>Each criterion is independently testable. Tick them off as you verify.</p>
+      <ol class="checklist">
+        <li><label><input type="checkbox"><span><code>POST /api/bookmarks</code> with a valid <code>questionId</code> and a valid auth token creates a bookmark and responds <strong>201</strong> with the bookmark document.</span></label></li>
+        <li><label><input type="checkbox"><span><code>POST /api/bookmarks</code> for a question the user has <strong>already</strong> saved does not create a duplicate and responds <strong>200</strong> with <code>message: "Question already saved"</code> and the existing bookmark.</span></label></li>
+        <li><label><input type="checkbox"><span><code>POST /api/bookmarks</code> without an auth token responds <strong>401</strong>.</span></label></li>
+        <li><label><input type="checkbox"><span><code>POST /api/bookmarks</code> with a <code>questionId</code> that does not reference an existing question responds <strong>404</strong> with <code>message: "Question not found"</code>.</span></label></li>
+        <li><label><input type="checkbox"><span><code>POST /api/bookmarks</code> with a missing or malformed <code>questionId</code> responds <strong>400</strong>.</span></label></li>
+        <li><label><input type="checkbox"><span><code>DELETE /api/bookmarks/:questionId</code> removes the current user's bookmark for that question and responds <strong>200</strong>.</span></label></li>
+        <li><label><input type="checkbox"><span><code>DELETE /api/bookmarks/:questionId</code> for a question the user has not saved still responds <strong>200</strong> (idempotent).</span></label></li>
+        <li><label><input type="checkbox"><span><code>GET /api/bookmarks</code> returns only the current user's saved questions, sorted by save time descending, each populated with <code>author</code> (name only), <code>tags</code>, and an <code>answerCount</code>.</span></label></li>
+        <li><label><input type="checkbox"><span><code>GET /api/bookmarks</code> returns <strong>200</strong> with an empty array when the user has saved nothing (empty is normal, <strong>not</strong> a 404).</span></label></li>
+        <li><label><input type="checkbox"><span><code>GET /api/bookmarks/ids</code> returns <strong>200</strong> with a flat array of the current user's saved question id strings.</span></label></li>
+        <li><label><input type="checkbox"><span>A user can bookmark their own question (no self-restriction).</span></label></li>
+        <li><label><input type="checkbox"><span>When a question is deleted, all bookmarks referencing it are removed, and it no longer appears in any user's saved list.</span></label></li>
+        <li><label><input type="checkbox"><span>In the UI, a <code>QuestionCard</code> and the question detail view show a <strong>filled</strong> bookmark icon when saved and an <strong>outline</strong> icon otherwise; clicking toggles state and updates without a page reload.</span></label></li>
+        <li><label><input type="checkbox"><span>Bookmark controls are not rendered for logged-out visitors.</span></label></li>
+        <li><label><input type="checkbox"><span>The Profile page shows a "Saved Questions" section; unsaving from that list removes the card from the section.</span></label></li>
+      </ol>
+    </section>
+
+    <!-- ============ API CONTRACT ============ -->
+    <section id="api" data-toc="API contract">
+      <h2>API contract</h2>
+      <p>All endpoints are mounted under <code>/api/bookmarks</code> (new router added to
+        <code>src/routes/index.js</code>). All require authentication via the existing
+        <code>authenticate</code> middleware (<code>Authorization: Bearer &lt;jwt&gt;</code>), which
+        sets <code>req.user = { id, isAdmin }</code>. All responses use the project envelope
+        <code>{ success, message, data }</code>. Errors are produced by throwing
+        <code>createAppError(message, statusCode)</code> from the service layer and surfaced by the
+        existing <code>errorHandler</code>.</p>
+
+      <div class="endpoint">
+        <div class="ep-head"><span class="method post">POST</span><span class="ep-path">/api/bookmarks</span><span class="ep-auth">🔒 Auth required</span></div>
+        <div class="ep-body">
+          <p>Save a question.</p>
+          <div class="status-row"><span class="pill created">201 Created</span><span class="pill ok">200 already saved</span><span class="pill err">400 invalid id</span><span class="pill err">404 question missing</span><span class="pill err">401 no token</span></div>
+          <p><strong>Request body</strong></p>
+          <figure class="code"><figcaption><span class="lang">json</span><button class="copy">Copy</button></figcaption><pre><code>{ "questionId": "&lt;ObjectId string&gt;" }</code></pre></figure>
+          <p><strong>201 Created</strong> (newly saved)</p>
+          <figure class="code"><figcaption><span class="lang">json</span><button class="copy">Copy</button></figcaption><pre><code>{
+  "success": true,
+  "message": "Question saved",
+  "data": { "_id": "...", "user": "...", "question": "...", "createdAt": "...", "updatedAt": "..." }
+}</code></pre></figure>
+          <ul class="body">
+            <li><strong>200 OK</strong> (already saved): same <code>data</code> shape, <code>message: "Question already saved"</code>.</li>
+            <li><strong>400</strong> — <code>questionId</code> missing or not a valid ObjectId: <code>message: "A valid questionId is required"</code>.</li>
+            <li><strong>404</strong> — question does not exist: <code>message: "Question not found"</code>.</li>
+            <li><strong>401</strong> — missing/invalid/expired token (from <code>authenticate</code>).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-head"><span class="method delete">DELETE</span><span class="ep-path">/api/bookmarks/:questionId</span><span class="ep-auth">🔒 Auth required</span></div>
+        <div class="ep-body">
+          <p>Unsave a question. <strong>Idempotent</strong> — returns 200 whether or not a bookmark existed.</p>
+          <div class="status-row"><span class="pill ok">200 OK</span><span class="pill err">400 invalid id</span><span class="pill err">401 no token</span></div>
+          <figure class="code"><figcaption><span class="lang">json</span><button class="copy">Copy</button></figcaption><pre><code>{ "success": true, "message": "Question unsaved", "data": { "questionId": "..." } }</code></pre></figure>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-head"><span class="method get">GET</span><span class="ep-path">/api/bookmarks</span><span class="ep-auth">🔒 Auth required</span></div>
+        <div class="ep-body">
+          <p>List the current user's saved questions, sorted by the bookmark's <code>createdAt</code> descending. Empty list → <strong>200</strong> with <code>data: []</code>.</p>
+          <div class="status-row"><span class="pill ok">200 OK</span><span class="pill err">401 no token</span></div>
+          <figure class="code"><figcaption><span class="lang">json</span><button class="copy">Copy</button></figcaption><pre><code>{
+  "success": true,
+  "message": "Saved questions fetched successfully",
+  "data": [
+    {
+      "_id": "...", "title": "...", "description": "...",
+      "tags": [ { "_id": "...", "name": "..." } ],
+      "author": { "_id": "...", "name": "..." },
+      "voteCount": 0, "views": 0, "answerCount": 2,
+      "createdAt": "...", "updatedAt": "...",
+      "savedAt": "..."
+    }
+  ]
+}</code></pre></figure>
+          <ul class="body">
+            <li><code>savedAt</code> mirrors the bookmark <code>createdAt</code> so the UI can show when it was saved (optional to use).</li>
+            <li>Dangling bookmarks (question since deleted) are filtered out defensively even though deletion cascades.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-head"><span class="method get">GET</span><span class="ep-path">/api/bookmarks/ids</span><span class="ep-auth">🔒 Auth required</span></div>
+        <div class="ep-body">
+          <p>Saved-state hydration. Lets the frontend mark which cards are saved without authenticating the public question-list endpoints. Lightweight (ids only).</p>
+          <div class="status-row"><span class="pill ok">200 OK</span><span class="pill err">401 no token</span></div>
+          <figure class="code"><figcaption><span class="lang">json</span><button class="copy">Copy</button></figcaption><pre><code>{ "success": true, "message": "Saved question ids fetched successfully", "data": ["&lt;questionId&gt;", ...] }</code></pre></figure>
+        </div>
+      </div>
+
+      <div class="callout warn"><span class="tag">Note on status-code strictness</span>
+        <p>Criteria 5 and 4 specify <code>400</code>/<code>404</code> for malformed/non-existent ids. This is intentionally stricter than some existing read endpoints (e.g. <code>getQuestionByIdService</code> lets a bad id fall through to a <code>500</code>). Bookmark services validate ids explicitly with <code>mongoose.Types.ObjectId.isValid</code> and throw <code>createAppError(..., 400)</code> before any DB call.</p>
+      </div>
+    </section>
+
+    <!-- ============ DATA MODEL ============ -->
+    <section id="data-model" data-toc="Data model changes">
+      <h2>Data model changes</h2>
+
+      <h3>New model: <code>src/models/Bookmark.js</code></h3>
+      <figure class="code"><figcaption><span class="lang">javascript</span><button class="copy">Copy</button></figcaption><pre><code>const bookmarkSchema = new mongoose.Schema({
+  user:     { type: mongoose.Schema.Types.ObjectId, ref: "User",     required: true },
+  question: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
+}, { timestamps: true });
+
+// One bookmark per (user, question); also the guard against duplicate saves and races.
+bookmarkSchema.index({ user: 1, question: 1 }, { unique: true });
+// Supports the "list my saved questions, newest first" query.
+bookmarkSchema.index({ user: 1, createdAt: -1 });</code></pre></figure>
+      <ul class="body">
+        <li><code>timestamps: true</code> provides <code>createdAt</code>, the save time used for ordering and the <code>savedAt</code> field in the list response.</li>
+        <li>The unique compound index is the canonical dedupe mechanism. The save service still checks for an existing bookmark first (to return <code>200</code> vs <code>201</code> deterministically), but the index protects against the two-tabs / double-click race; an <code>E11000</code> duplicate-key error from a racing insert is treated as "already saved" (<code>200</code>), not a <code>500</code>.</li>
+      </ul>
+
+      <h3>Change to <code>src/services/questionService.js</code> — <code>deleteQuestionService</code></h3>
+      <p>Extend the existing cascade (which already runs <code>Answer.deleteMany({ questionId: id })</code>) to also remove bookmarks:</p>
+      <figure class="code"><figcaption><span class="lang">javascript</span><button class="copy">Copy</button></figcaption><pre><code>await Bookmark.deleteMany({ question: id });</code></pre></figure>
+      <p>This keeps the constraint in criterion 12 and prevents dangling bookmarks. No change to <code>User</code> or <code>Question</code> schemas.</p>
+
+      <h3>Models registered</h3>
+      <p><code>Bookmark</code> must be imported in <code>src/app.js</code> alongside the other models (<code>Question</code>, <code>Answer</code>, <code>User</code>, <code>Tag</code>) so the model is registered before routes handle requests (matches the existing pattern of importing all models in <code>app.js</code>).</p>
+    </section>
+
+    <!-- ============ UI CHANGES ============ -->
+    <section id="ui" data-toc="UI changes">
+      <h2>UI changes</h2>
+
+      <h3>New Redux slice: <code>src/reducers/bookmarkSlice.js</code></h3>
+      <p>State:</p>
+      <figure class="code"><figcaption><span class="lang">javascript</span><button class="copy">Copy</button></figcaption><pre><code>{
+  savedIds: [],          // string[] of saved questionIds — drives card/detail icon state
+  savedQuestions: [],    // full question objects for the profile section
+  loadingIds: false,
+  loadingList: false,
+  error: null,
+}</code></pre></figure>
+      <p><strong>Async thunks</strong> (call the service layer, never axios directly; read the token from <code>getState().user.userInfo.token</code>, matching <code>questionSlice</code>):</p>
+      <ul class="body">
+        <li><code>fetchSavedIds()</code> → <code>GET /bookmarks/ids</code>; populates <code>savedIds</code>.</li>
+        <li><code>fetchSavedQuestions()</code> → <code>GET /bookmarks</code>; populates <code>savedQuestions</code>.</li>
+        <li><code>toggleBookmark({ questionId })</code> → if <code>questionId</code> is in <code>savedIds</code>, call unsave; else call save. Update <code>savedIds</code> and, when present, <code>savedQuestions</code> (remove the card on unsave) in the fulfilled reducer. On reject, restore prior state and set <code>error</code>.</li>
+      </ul>
+      <p><strong>Sync reducer:</strong> <code>clearBookmarks()</code> → resets slice to initial state.</p>
+      <p>Register <code>bookmark</code> reducer in <code>src/store.js</code> (currently <code>user</code>, <code>question</code>, <code>theme</code>).</p>
+
+      <h3>Hydration / teardown wiring</h3>
+      <ul class="body">
+        <li>When <code>userInfo</code> becomes truthy (login or app load with a stored token), dispatch <code>fetchSavedIds()</code>. Implemented as an effect in a top-level component that already has access to <code>userInfo</code> (<code>BaseLayout</code> or <code>App</code>), keyed on <code>userInfo</code>.</li>
+        <li><code>logoutUser</code> (in <code>userSlice</code>) additionally dispatches <code>clearBookmarks()</code> so saved-state does not leak across accounts.</li>
+      </ul>
+
+      <h3>New service: <code>src/services/bookmarkService.js</code></h3>
+      <p>Thin wrappers over <code>axiosInstance</code>, returning <code>res.data.data</code>, passing <code>Authorization: Bearer ${token}</code> explicitly (consistent with <code>questionService</code>):</p>
+      <ul class="body">
+        <li><code>getSavedIds(token)</code></li>
+        <li><code>getSavedQuestions(token)</code></li>
+        <li><code>saveQuestion(questionId, token)</code></li>
+        <li><code>unsaveQuestion(questionId, token)</code></li>
+      </ul>
+
+      <h3>New endpoint config: <code>src/config/config.js</code></h3>
+      <figure class="code"><figcaption><span class="lang">javascript</span><button class="copy">Copy</button></figcaption><pre><code>export const BOOKMARK_API = {
+  LIST: "/bookmarks",
+  IDS: "/bookmarks/ids",
+  SAVE: "/bookmarks",
+  UNSAVE: (questionId) =&gt; `/bookmarks/${questionId}`,
+};</code></pre></figure>
+
+      <h3>New shared component: <code>src/components/Shared/BookmarkButton.jsx</code></h3>
+      <ul class="body">
+        <li>Props: <code>{ questionId }</code>.</li>
+        <li>Reads <code>state.bookmark.savedIds</code> and <code>state.user.userInfo</code>.</li>
+        <li>Renders nothing when not authenticated (criterion 14).</li>
+        <li>Shows <code>FaBookmark</code> (filled) when saved, <code>FaRegBookmark</code> (outline) otherwise (<code>react-icons/fa</code>, already a dependency).</li>
+        <li>On click: <code>dispatch(toggleBookmark({ questionId }))</code>; on rejected toggle, show the existing <code>alert(...)</code> pattern used by <code>QuestionCard</code>'s vote handler.</li>
+      </ul>
+
+      <h3>Components modified</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td><code>QuestionCard.jsx</code></td><td>Render <code>&lt;BookmarkButton questionId={question._id} /&gt;</code> in the card (e.g. in the stats column near the vote/answer counts).</td></tr>
+          <tr><td><code>QuestionContent.jsx</code></td><td>Render <code>&lt;BookmarkButton questionId={question._id} /&gt;</code> on the detail view (the component <code>QuestionDetail</code> renders).</td></tr>
+          <tr><td><code>pages/Profile/Profile.jsx</code></td><td>Add a "Saved Questions" section (shown when not editing). On mount (when authenticated) dispatch <code>fetchSavedQuestions()</code>; map <code>savedQuestions</code> to <code>&lt;QuestionCard /&gt;</code>. Show a friendly empty state and a <code>Spinner</code> while <code>loadingList</code>.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Routes</h3>
+      <p>No new React Router routes. Bookmarks are surfaced inline (cards + detail + profile section). Navbar unchanged.</p>
+    </section>
+
+    <!-- ============ EDGE CASES ============ -->
+    <section id="edge-cases" data-toc="Edge cases &amp; errors">
+      <h2>Edge cases &amp; error handling</h2>
+      <ul class="body">
+        <li><strong>Double-save / two tabs:</strong> unique index + pre-check; a racing duplicate insert (<code>E11000</code>) is caught and treated as <code>200 "Question already saved"</code>.</li>
+        <li><strong>Unsave something not saved:</strong> idempotent <code>200</code>.</li>
+        <li><strong>Save/unsave with malformed ObjectId:</strong> <code>400</code> before any DB call.</li>
+        <li><strong>Save a non-existent question:</strong> <code>404 "Question not found"</code> (service verifies the question exists before inserting).</li>
+        <li><strong>Bookmarking own question:</strong> allowed.</li>
+        <li><strong>Question deleted after being saved:</strong> bookmarks cascade-delete on question deletion; <code>GET /api/bookmarks</code> also filters out null-populated entries defensively.</li>
+        <li><strong>No saved questions:</strong> <code>GET /api/bookmarks</code> and <code>/ids</code> return <code>200</code> with <code>[]</code> (not <code>404</code>) — a deliberate deviation from <code>getAllQuestionsService</code>, which throws <code>404</code> on empty, because an empty personal list is normal.</li>
+        <li><strong>Expired/invalid/missing token:</strong> <code>401</code> from <code>authenticate</code>.</li>
+        <li><strong>Logged-out user in the UI:</strong> bookmark controls are not rendered; there is no client path to call the save endpoints unauthenticated.</li>
+        <li><strong>Stale saved-state on account switch:</strong> cleared via <code>clearBookmarks()</code> on logout.</li>
+        <li><strong>Rate limiting:</strong> the existing global limiter (100 req / 15 min per IP) applies to these routes unchanged.</li>
+      </ul>
+    </section>
+
+    <!-- ============ OUT OF SCOPE ============ -->
+    <section id="out-of-scope" data-toc="Out of scope">
+      <h2>Out of scope</h2>
+      <ul class="body">
+        <li>Bookmarking answers (only questions are bookmarkable).</li>
+        <li>Folders, collections, labels, or notes on bookmarks.</li>
+        <li>Public or shareable saved lists; showing a public "saved N times" count on questions.</li>
+        <li>Pagination / infinite scroll of the saved list (acceptable for expected volumes now; revisit if lists grow large).</li>
+        <li>Notifications or activity feeds derived from bookmarks.</li>
+        <li>Reordering saved questions manually.</li>
+        <li>Fixing the pre-existing <code>USER_API.STATS</code> gap (stats endpoint referenced by the Profile page but absent from routes) — unrelated to this feature.</li>
+      </ul>
+    </section>
+
+    <!-- ============ TEST PLAN ============ -->
+    <section id="test-plan" data-toc="Test plan">
+      <h2>Test plan</h2>
+
+      <h3>Backend — Vitest + Supertest + mongodb-memory-server</h3>
+      <p><code>tests/setup.js</code> provides the in-memory DB. Auth tokens are obtained the same way as existing integration tests — create a user and sign a JWT with <code>process.env.JWT_SECRET</code>, or go through the register/login flow.</p>
+
+      <h4>Unit — tests/unit/services/bookmarkService.test.js</h4>
+      <ul class="body">
+        <li><code>save</code> creates a bookmark and returns it (201-path / <code>created: true</code>).</li>
+        <li><code>save</code> on an existing (user, question) returns the existing bookmark without creating a duplicate (<code>created: false</code>); collection count stays at 1.</li>
+        <li><code>save</code> throws <code>404</code> when the question does not exist.</li>
+        <li><code>save</code> throws <code>400</code> for a malformed <code>questionId</code>.</li>
+        <li><code>unsave</code> removes the bookmark; <code>unsave</code> again is a no-op that does not throw.</li>
+        <li><code>list</code> returns the user's bookmarks sorted by <code>createdAt</code> desc, populated with <code>author.name</code>, <code>tags</code>, <code>answerCount</code>; excludes other users' bookmarks.</li>
+        <li><code>list</code> returns <code>[]</code> when none exist.</li>
+        <li><code>list</code> omits bookmarks whose question was deleted.</li>
+        <li><code>ids</code> returns the array of saved question id strings for the user only.</li>
+      </ul>
+
+      <h4>Integration — tests/integration/bookmarks.test.js</h4>
+      <ul class="body">
+        <li><code>401</code> for each endpoint without a token.</li>
+        <li><code>POST</code> valid → <code>201</code>; immediate re-<code>POST</code> → <code>200</code> "already saved"; DB has exactly one bookmark.</li>
+        <li><code>POST</code> non-existent question → <code>404</code>; malformed id → <code>400</code>.</li>
+        <li><code>GET /api/bookmarks</code> returns saved questions newest-first with populated <code>author</code>/<code>tags</code>/<code>answerCount</code>; <code>200 []</code> when none.</li>
+        <li><code>GET /api/bookmarks/ids</code> returns the id array.</li>
+        <li><code>DELETE /api/bookmarks/:questionId</code> → <code>200</code>; repeat → <code>200</code> (idempotent); subsequent <code>GET</code> no longer lists it.</li>
+        <li>User A's bookmarks are not visible to User B.</li>
+        <li>Deleting a question removes its bookmarks: a follow-up <code>GET /api/bookmarks</code> for a user who had saved it returns a list without that question.</li>
+      </ul>
+
+      <h3>Frontend — Vitest + jsdom + Testing Library + MSW</h3>
+      <p>Add handlers to <code>tests/mocks/handlers.js</code>.</p>
+
+      <h4>Unit — tests/unit/reducers/bookmarkSlice.test.jsx</h4>
+      <ul class="body">
+        <li>Initial state shape.</li>
+        <li><code>fetchSavedIds</code> / <code>fetchSavedQuestions</code> fulfilled populate <code>savedIds</code> / <code>savedQuestions</code>.</li>
+        <li><code>toggleBookmark</code> adds an id when not saved and removes it (and its card from <code>savedQuestions</code>) when already saved.</li>
+        <li><code>clearBookmarks</code> resets state.</li>
+      </ul>
+
+      <h4>Component</h4>
+      <ul class="body">
+        <li><code>tests/unit/components/BookmarkButton.test.jsx</code> — renders outline when id not in <code>savedIds</code>, filled when it is; click dispatches <code>toggleBookmark</code>; renders nothing when <code>userInfo</code> is null.</li>
+        <li><code>QuestionCard.test.jsx</code> — extend to assert the bookmark control renders for an authenticated user.</li>
+        <li><code>tests/unit/pages/profile.test.jsx</code> — extend: with a mocked <code>GET /bookmarks</code> returning two questions, the "Saved Questions" section renders two <code>QuestionCard</code>s; with an empty response, the empty-state message renders.</li>
+      </ul>
+
+      <h4>Integration — tests/integration/bookmarkFlow.test.jsx (MSW-backed)</h4>
+      <ul class="body">
+        <li>Authenticated user saves a question from a card → icon flips to filled and the id is in <code>savedIds</code>.</li>
+        <li>Navigating to the profile shows the saved question; unsaving it from the profile removes the card.</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  Generated from <code>specs/001-bookmarks.md</code> by the <code>/html-spec</code> command · DevAnswers · 12 June 2026.
+  Diagrams rendered with Mermaid. This document is a single self-contained HTML file.
+</footer>
+
+<!-- Mermaid (the only external dependency) -->
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "neutral",
+    securityLevel: "loose",
+    flowchart: { curve: "basis", padding: 14 },
+    sequence: { mirrorActors: false, wrap: true },
+  });
+</script>
+
+<!-- TOC build, scroll-spy, theme toggle, copy buttons (all inline, no dependencies) -->
+<script>
+(function () {
+  // ---- Build TOC from sections ----
+  var tocList = document.getElementById("tocList");
+  var sections = Array.prototype.slice.call(document.querySelectorAll("main section[data-toc]"));
+  var links = {};
+  sections.forEach(function (sec) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + sec.id;
+    a.textContent = sec.getAttribute("data-toc");
+    a.addEventListener("click", function () {
+      // let smooth scroll happen; active state updates via observer
+    });
+    li.appendChild(a);
+    tocList.appendChild(li);
+    links[sec.id] = a;
+  });
+
+  // ---- Scroll-spy ----
+  var spy = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        Object.keys(links).forEach(function (id) { links[id].classList.remove("active"); });
+        var active = links[e.target.id];
+        if (active) active.classList.add("active");
+      }
+    });
+  }, { rootMargin: "-10% 0px -75% 0px", threshold: 0 });
+  sections.forEach(function (s) { spy.observe(s); });
+
+  // ---- Theme toggle ----
+  var root = document.documentElement;
+  var btn = document.getElementById("themeToggle");
+  var label = document.getElementById("themeLabel");
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var dark = t === "dark";
+    label.textContent = dark ? "Light" : "Dark";
+    btn.firstChild.nodeValue = dark ? "☀ " : "🌙 ";
+    try { localStorage.setItem("htmlspec-theme", t); } catch (e) {}
+  }
+  var saved;
+  try { saved = localStorage.getItem("htmlspec-theme"); } catch (e) {}
+  if (saved) applyTheme(saved);
+  btn.addEventListener("click", function () {
+    applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  // ---- Copy buttons ----
+  document.querySelectorAll("figure.code .copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var code = btn.closest("figure.code").querySelector("code");
+      var text = code ? code.innerText : "";
+      var done = function () {
+        btn.textContent = "Copied ✓"; btn.classList.add("done");
+        setTimeout(function () { btn.textContent = "Copy"; btn.classList.remove("done"); }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        var ta = document.createElement("textarea");
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta); done();
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
