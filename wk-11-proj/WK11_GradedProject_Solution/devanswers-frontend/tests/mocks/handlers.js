@@ -1,0 +1,275 @@
+import { http, HttpResponse } from "msw";
+import {
+  mockUsers,
+  mockQuestions,
+  mockAnswers,
+  mockTags,
+  mockAuthResponse,
+} from "./mockData";
+
+const BASE_URL = "http://localhost:3000/api";
+
+// In-memory saved set so POST/DELETE bookmark handlers reflect state within a
+// test. Reset between tests with resetBookmarks() (module state is per test file).
+const savedQuestionIds = new Set();
+
+export const resetBookmarks = (initialIds = []) => {
+  savedQuestionIds.clear();
+  initialIds.forEach((id) => savedQuestionIds.add(id));
+};
+
+export const handlers = [
+  // ── Auth endpoints ────────────────────────────────────────────────────────
+  http.post(`${BASE_URL}/auth/login`, async ({ request }) => {
+    const body = await request.json();
+
+    if (body.email === "alice@example.com" && body.password === "password123") {
+      return HttpResponse.json({ data: mockAuthResponse.login });
+    }
+
+    return HttpResponse.json(
+      { message: "Invalid email or password" },
+      { status: 401 },
+    );
+  }),
+
+  http.post(`${BASE_URL}/auth/register`, async ({ request }) => {
+    const body = await request.json();
+
+    if (body.email === "existing@example.com") {
+      return HttpResponse.json(
+        { message: "Email already exists" },
+        { status: 400 },
+      );
+    }
+
+    return HttpResponse.json({ data: mockAuthResponse.register });
+  }),
+
+  // ── Question endpoints ────────────────────────────────────────────────────
+  http.get(`${BASE_URL}/questions`, () => {
+    return HttpResponse.json({ data: mockQuestions });
+  }),
+
+  http.get(`${BASE_URL}/questions/:id`, ({ params }) => {
+    const question = mockQuestions.find((q) => q._id === params.id);
+
+    if (!question) {
+      return HttpResponse.json(
+        { message: "Question not found" },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({ data: question });
+  }),
+
+  http.post(`${BASE_URL}/questions`, async ({ request }) => {
+    const body = await request.json();
+
+    const newQuestion = {
+      _id: `question-${Date.now()}`,
+      ...body,
+      voteCount: 0,
+      upvotes: [],
+      downvotes: [],
+      answerCount: 0,
+      answers: [],
+      author: { _id: body.author, name: mockUsers.user1.name },
+      createdAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({ data: newQuestion }, { status: 201 });
+  }),
+
+  http.put(`${BASE_URL}/questions/:id`, async ({ request, params }) => {
+    const body = await request.json();
+    const existing = mockQuestions.find((q) => q._id === params.id);
+
+    const tags = (body.tags || "")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((name, i) => ({ _id: `tag-edit-${i}`, name }));
+
+    return HttpResponse.json({
+      data: {
+        _id: params.id,
+        title: body.title,
+        description: body.description,
+        tags,
+        author: existing?.author ?? { _id: "user-1", name: mockUsers.user1.name },
+        voteCount: existing?.voteCount ?? 0,
+        views: existing?.views ?? 0,
+        upvotes: existing?.upvotes ?? [],
+        downvotes: existing?.downvotes ?? [],
+        isEdited: true,
+        editedAt: new Date().toISOString(),
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+      },
+    });
+  }),
+
+  http.post(`${BASE_URL}/questions/:id/upvote`, ({ params }) => {
+    const question = mockQuestions.find((q) => q._id === params.id);
+
+    if (!question) {
+      return HttpResponse.json(
+        { message: "Question not found" },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: { ...question, voteCount: question.voteCount + 1 },
+    });
+  }),
+
+  http.post(`${BASE_URL}/questions/:id/downvote`, ({ params }) => {
+    const question = mockQuestions.find((q) => q._id === params.id);
+
+    if (!question) {
+      return HttpResponse.json(
+        { message: "Question not found" },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: { ...question, voteCount: question.voteCount - 1 },
+    });
+  }),
+
+  // ── Answer endpoints ──────────────────────────────────────────────────────
+  http.post(
+    `${BASE_URL}/questions/:questionId/answers`,
+    async ({ request }) => {
+      const body = await request.json();
+
+      const newAnswer = {
+        _id: `answer-${Date.now()}`,
+        answerText: body.answerText,
+        author: { _id: body.author, name: mockUsers.user1.name },
+        voteCount: 0,
+        upvotes: [],
+        downvotes: [],
+        createdAt: new Date().toISOString(),
+      };
+
+      return HttpResponse.json({ data: newAnswer }, { status: 201 });
+    },
+  ),
+
+  http.put(`${BASE_URL}/answers/:answerId`, async ({ request, params }) => {
+    const body = await request.json();
+    const existing = mockAnswers.find((a) => a._id === params.answerId);
+
+    return HttpResponse.json({
+      data: {
+        _id: params.answerId,
+        answerText: body.answerText,
+        author: existing?.author ?? { _id: "user-1", name: mockUsers.user1.name },
+        voteCount: existing?.voteCount ?? 0,
+        upvotes: existing?.upvotes ?? [],
+        downvotes: existing?.downvotes ?? [],
+        isEdited: true,
+        editedAt: new Date().toISOString(),
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+      },
+    });
+  }),
+
+  http.post(`${BASE_URL}/answers/:id/upvote`, ({ params }) => {
+    const answer = mockAnswers.find((a) => a._id === params.id);
+
+    if (!answer) {
+      return HttpResponse.json(
+        { message: "Answer not found" },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: { ...answer, voteCount: answer.voteCount + 1 },
+    });
+  }),
+
+  http.post(`${BASE_URL}/answers/:id/downvote`, ({ params }) => {
+    const answer = mockAnswers.find((a) => a._id === params.id);
+
+    if (!answer) {
+      return HttpResponse.json(
+        { message: "Answer not found" },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      data: { ...answer, voteCount: answer.voteCount - 1 },
+    });
+  }),
+
+  // ── Tag endpoints ─────────────────────────────────────────────────────────
+  http.get(`${BASE_URL}/tags`, () => {
+    return HttpResponse.json({ data: mockTags });
+  }),
+
+  http.get(`${BASE_URL}/tags/:tagId/questions`, ({ params }) => {
+    const questions = mockQuestions.filter((q) =>
+      q.tags.some((t) => t._id === params.tagId),
+    );
+    return HttpResponse.json({ data: questions });
+  }),
+
+  // ── User stats endpoint ───────────────────────────────────────────────────
+  http.get(`${BASE_URL}/auth/stats/:userId`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        totalQuestions: 3,
+        totalAnswers: 5,
+        totalVotesReceived: 12,
+        reputation: 75,
+      },
+    });
+  }),
+
+  // ── Bookmark endpoints ────────────────────────────────────────────────────
+  http.get(`${BASE_URL}/bookmarks/ids`, () => {
+    return HttpResponse.json({ data: [...savedQuestionIds] });
+  }),
+
+  http.get(`${BASE_URL}/bookmarks`, () => {
+    const saved = mockQuestions
+      .filter((q) => savedQuestionIds.has(q._id))
+      .map((q) => ({ ...q, savedAt: q.createdAt }));
+    return HttpResponse.json({ data: saved });
+  }),
+
+  http.post(`${BASE_URL}/bookmarks`, async ({ request }) => {
+    const { questionId } = await request.json();
+
+    if (!questionId) {
+      return HttpResponse.json(
+        { message: "A valid questionId is required" },
+        { status: 400 },
+      );
+    }
+
+    const already = savedQuestionIds.has(questionId);
+    savedQuestionIds.add(questionId);
+
+    return HttpResponse.json(
+      {
+        data: { _id: `bookmark-${questionId}`, question: questionId },
+        message: already ? "Question already saved" : "Question saved",
+      },
+      { status: already ? 200 : 201 },
+    );
+  }),
+
+  http.delete(`${BASE_URL}/bookmarks/:questionId`, ({ params }) => {
+    savedQuestionIds.delete(params.questionId);
+    return HttpResponse.json({ data: { questionId: params.questionId } });
+  }),
+];

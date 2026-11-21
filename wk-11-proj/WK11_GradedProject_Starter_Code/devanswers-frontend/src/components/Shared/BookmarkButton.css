@@ -1,0 +1,22 @@
+.bookmark-btn {
+  border: none;
+  background: none;
+  line-height: 1;
+  font-size: 1rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.bookmark-btn:hover,
+.bookmark-btn:focus-visible {
+  color: var(--primary-color);
+}
+
+.bookmark-btn:active {
+  transform: scale(0.85);
+}
+
+.bookmark-btn--saved,
+.bookmark-btn--saved:hover {
+  color: var(--secondary-color);
+}
