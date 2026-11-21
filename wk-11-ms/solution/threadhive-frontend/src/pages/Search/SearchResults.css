@@ -1,0 +1,19 @@
+.search-results-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.search-results-heading {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+  word-break: break-word;
+}
+
+.search-results-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
